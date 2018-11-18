@@ -1,15 +1,29 @@
 from flask import Flask, request, jsonify
-from selector.db import *
 import numpy as np
 
-from selector.mlkit import MLKit
+try:
+    from selector.db import *
+except ImportError:
+    from db import *
+
+try:
+    from selector.mlkit import MLKit
+except ImportError:
+    from mlkit import MLKit
+
+from flask_cors import CORS
 
 app = Flask(__name__)
+
+CORS(app)
 
 specs = ['perseverance', 'collectivism', 'success', 'hang', 'adaptability', 'self_esteem_conflict',
          'empathy', 'determination', 'leadership', 'hard_work', 'initiative', 'emotional_stability', 'pseudology']
 
 ml = MLKit(specs, specs)
+
+assesment = dict()
+
 
 # for value in specs:
 #     column = Column(value, Integer)
@@ -49,6 +63,35 @@ def add_mentor(login):
                         ', '.join(
                             list(['\'' + login + '\''] + [str(data.get(spec)) for spec in specs if data.get(spec)])),
                         ', '.join([spec + '=' + str(data.get(spec)) for spec in specs if data.get(spec)])))
+    session.commit()
+    return jsonify({'status': 'ok'})
+
+
+@app.route('/add/assesment', methods=['POST'])
+def add_assesment():
+    session = Session()
+    owner = request.args.get('owner')
+    marked = request.args.get('marked')
+    value = request.args.get('value')
+    print("Request: ", owner, marked, value)
+    if marked not in assesment:
+        assesment[owner] = (marked, value)
+    elif assesment[marked][0] == owner:
+        average = (int(value) + int(assesment[marked][1])) / 2
+        del assesment[marked]
+        if average >= 5 / 2:
+            if session.query(Developer.login).filter_by(login=owner).scalar() and \
+                    session.query(Mentor.login).filter_by(login=marked).scalar():
+                # Если человек с ограниченными способностями - owner, а ментор - marked
+                engine.execute('INSERT INTO precedents (developer, mentor)  VALUES (%s, %s)' %
+                               ("\'" + owner + "\'", "\'" + marked + "\'"))
+            elif session.query(Mentor.login).filter_by(login=owner).scalar() and \
+                    session.query(Developer.login).filter_by(login=marked).scalar():
+                engine.execute('INSERT INTO precedents (developer, mentor)  VALUES (%s, %s)' %
+                               ("\'" + marked + "\'", "\'" + owner + "\'"))
+    else:
+        return jsonify({'status': 'error'
+                                  ''})
     session.commit()
     return jsonify({'status': 'ok'})
 

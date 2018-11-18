@@ -1,6 +1,8 @@
 __all__ = []
-
-from selector.main import app, learn
+try:
+    from selector.main import app, learn
+except ImportError:
+    from main import app, learn
 
 if __name__ == '__main__':
     learn()
