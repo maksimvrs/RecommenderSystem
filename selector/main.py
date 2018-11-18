@@ -158,7 +158,10 @@ def learn():
         X_train[np.isnan(np.array(X_train, dtype=np.float64))] = 0
         y_train[np.isnan(np.array(y_train, dtype=np.float64))] = 0
 
-        ml.fit(X_train, y_train)
+        try:
+            ml.fit(X_train, y_train)
+        except ValueError:
+            print("Fitting value error")
 
 
 if __name__ == '__main__':
