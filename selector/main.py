@@ -11,7 +11,6 @@ specs = ['perseverance', 'collectivism', 'success', 'hang', 'adaptability', 'sel
 
 ml = MLKit(specs, specs)
 
-
 # for value in specs:
 #     column = Column(value, Integer)
 #     add_column('developers', column)
@@ -81,7 +80,7 @@ def get(login):
             predict = predict_mentor(predict_vector)
             predict = [{'mentor': pred[0], 'distance': pred[1]} for pred in predict]
     except:
-        return jsonify({'error': 'data base error'})
+        return jsonify({'error': 'database error'})
 
     return jsonify({'predict': predict})
 
@@ -98,6 +97,7 @@ def predict_mentor(predict_vector):
 
 
 def learn():
+    print("Learning")
     X_train = np.empty((0, len(specs)))
     y_train = np.empty((0, len(specs)))
     precedents = engine.execute('SELECT * FROM precedents')
@@ -116,4 +116,5 @@ def learn():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    learn()
+    app.run(host='0.0.0.0', port=5000, debug=True)
