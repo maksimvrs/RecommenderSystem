@@ -101,7 +101,9 @@ def learn():
     X_train = np.empty((0, len(specs)))
     y_train = np.empty((0, len(specs)))
     precedents = engine.execute('SELECT * FROM precedents')
+    is_empty = True
     for value in precedents:
+        is_empty = False
         developer = engine.execute('SELECT * FROM developers WHERE login = %s' % "\'" + value[1] + "\'")
         mentor = engine.execute('SELECT * FROM mentors WHERE login = %s' % "\'" + value[2] + "\'")
         for value in developer:
@@ -109,10 +111,11 @@ def learn():
         for value in mentor:
             y_train = np.vstack((y_train, value[1:]))
 
-    X_train[np.isnan(np.array(X_train, dtype=np.float64))] = 0
-    y_train[np.isnan(np.array(y_train, dtype=np.float64))] = 0
+    if not is_empty:
+        X_train[np.isnan(np.array(X_train, dtype=np.float64))] = 0
+        y_train[np.isnan(np.array(y_train, dtype=np.float64))] = 0
 
-    ml.fit(X_train, y_train)
+        ml.fit(X_train, y_train)
 
 
 if __name__ == '__main__':
